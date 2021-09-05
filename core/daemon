@@ -1,5 +1,8 @@
 #!/bin/bash
 
+export DAEMON_SERVICE_DIR=/etc/systemd/system
+export DAEMON_PREFIX=zmicro_
+
 daemon_get_service_name() {
   local name=$1
   if [ "$name" = "" ]; then
@@ -8,6 +11,18 @@ daemon_get_service_name() {
   fi
 
   echo "zmicro_${name}"
+}
+
+daemon_parse_service_name() {
+  local service_name=$1
+  if [ "$service_name" = "" ]; then
+    log_error "[daemon_parse_service_name] service_name is required"
+    exit 1
+  fi
+
+  local remove_dot_service=$(string_remove $service_name .service)
+  local remove_prefix=$(string_remove $remove_dot_service $DAEMON_PREFIX)
+  echo $remove_prefix
 }
 
 daemon_get_service_path() {
@@ -22,12 +37,29 @@ daemon_get_service_path() {
 }
 
 daemon_is_service_exist() {
-  local service_path=$(daemon_get_service_path $1)
+  local name=$1
+  if [ "$name" = "" ]; then
+    log_error "[daemon_is_service_exist] name is required"
+    exit 1
+  fi
+
+  local service_path=$(daemon_get_service_path $name)
   if [ ! -f $service_path ]; then
     echo "false"
   else
     echo "true"
   fi
+}
+
+daemon_is_service() {
+  # zmicro_vscode_protect.service
+  local service_name=$1
+  if [ "$service_name" = "" ]; then
+    log_error "[daemon_is_service] service_name is required"
+    exit 1
+  fi
+
+  echo "$(string_match $service_name ^${DAEMON_PREFIX})"
 }
 
 daemon_has_service() {
@@ -247,10 +279,35 @@ daemon_remove() {
   log_success "daemon serice ${name} removed"
 }
 
+daemon_list() {
+  local services=$(array_filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
+  local services_count=$(array_length $services)
+
+  if [ $services_count -eq 0 ]; then
+    log "    (no avaliable services)"
+    exit 0
+  fi
+
+  log "daemon services: $services_count"
+  log ""
+
+  print() {
+    local index=$1
+    local file_name=$2
+    local service_name=$(daemon_parse_service_name $file_name)
+
+    log "    $index $(color_success "$service_name")"
+  }
+
+  array_each print $services
+}
+
 export -f daemon_get_service_name
+export -f daemon_parse_service_name
 export -f daemon_get_service_path
 export -f daemon_is_service_exist
 export -f daemon_has_service
+export -f daemon_is_service
 
 export -f daemon_logs
 export -f daemon_status
@@ -263,3 +320,6 @@ export -f daemon_disable
 
 export -f daemon_create
 export -f daemon_remove
+
+export -f daemon_list
+

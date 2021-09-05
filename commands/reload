@@ -1,0 +1,26 @@
+#!/bin/bash
+
+help() {
+  echo "Reload a daemon service"
+  echo ""
+  echo "Usage:"
+  echo "  zdaemon reload [options] [app_name]"
+  # echo ""
+  # echo "Options:"
+  # echo "  -f, --follow  Follow logs"
+}
+
+core() {
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    help
+    exit 0
+  fi
+
+  daemon_reload $@
+}
+
+run() {
+  core $@
+}
+
+run $@

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+help() {
+  echo "List all daemon services"
+  echo ""
+  echo "Usage:"
+  echo "  zdaemon list [options]"
+  # echo ""
+  # echo "Options:"
+  # echo "  -f, --follow  Follow logs"
+}
+
+core() {
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    help
+    exit 0
+  fi
+
+  daemon_list $@
+}
+
+run() {
+  core $@
+}
+
+run $@
