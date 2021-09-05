@@ -1,0 +1,23 @@
+#!/bin/bash
+
+help() {
+  echo "Status a daemon service"
+  echo ""
+  echo "Usage:"
+  echo "  zdaemon status [options] [app_name]"
+}
+
+core() {
+  if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+    help
+    exit 0
+  fi
+
+  daemon_status $@
+}
+
+run() {
+  core $@
+}
+
+run $@
