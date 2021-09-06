@@ -280,26 +280,22 @@ daemon_remove() {
 }
 
 daemon_list() {
-  local services=$(array_filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
-  local services_count=$(array_length $services)
-
-  if [ $services_count -eq 0 ]; then
-    log "    (no avaliable services)"
-    exit 0
-  fi
-
-  log "daemon services: $services_count"
-  log ""
-
-  print() {
-    local index=$1
+  local service_files=$(array_filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
+  
+  parser() {
+     local index=$1
     local file_name=$2
     local service_name=$(daemon_parse_service_name $file_name)
-
-    log "    $index $(color_success "$service_name")"
+    echo $service_name
   }
 
-  array_each print $services
+  array_each parser $service_files
+}
+
+daemon_count() {
+  local services=$(daemon_list $@)
+
+  array_length $services
 }
 
 export -f daemon_get_service_name
@@ -322,4 +318,5 @@ export -f daemon_create
 export -f daemon_remove
 
 export -f daemon_list
+export -f daemon_count
 

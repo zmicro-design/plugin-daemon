@@ -16,7 +16,25 @@ core() {
     exit 0
   fi
 
-  daemon_list $@
+  local servies=$(daemon_list $@)
+  
+  print() {
+    local index=$1
+    local service_name=$2
+
+    log "    $index $(color_success "$service_name")"
+  }
+
+  local services_count=$(daemon_count)
+  if [ $services_count -eq 0 ]; then
+    log "    (no avaliable services)"
+    exit 0
+  fi
+
+  log "daemon services: $services_count"
+  log ""
+
+  array_each print $services
 }
 
 run() {
