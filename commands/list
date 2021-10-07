@@ -16,8 +16,8 @@ core() {
     exit 0
   fi
 
-  local servies=$(daemon_list $@)
-  
+  local services=$(daemon_list $@)
+
   print() {
     local index=$1
     local service_name=$2
