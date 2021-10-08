@@ -1,5 +1,7 @@
 #!/bin/bash
 
+export DAEMON_SERVICE_LOG_DIR=/var/log/zmicro/daemon
+
 export DAEMON_SERVICE_DIR=/etc/systemd/system
 export DAEMON_PREFIX=zmicro_
 export DEAMON_SUFFIX=.sevice
@@ -12,6 +14,13 @@ if [ "$(os_is_macos)" = "true" ]; then
   export DAEMON_SERVICE_DIR=$DAEMON_SERVICE_DIR_MAC_OS
   export DAEMON_PREFIX=com.zcorky.zmicro.
   export DEAMON_SUFFIX=.plist
+fi
+
+if [ ! -d "$DAEMON_SERVICE_LOG_DIR" ]; then
+  sudo mkdir -p $DAEMON_SERVICE_LOG_DIR
+fi
+if [ ! -w "$DAEMON_SERVICE_LOG_DIR" ]; then
+  sudo chown -R $USER $DAEMON_SERVICE_LOG_DIR
 fi
 
 daemon_get_service_name() {
@@ -56,6 +65,17 @@ daemon_get_service_path() {
   fi
 
   echo "/etc/systemd/system/${service}.service"
+}
+
+daemon_get_service_log_path() {
+  local name=$1
+  if [ "$name" = "" ]; then
+    log_error "name is required"
+    exit 1
+  fi
+
+  # local service=$(daemon_get_service_name $name)
+  echo "$DAEMON_SERVICE_LOG_DIR/$name.log"
 }
 
 daemon_is_service_exist() {
@@ -121,14 +141,14 @@ daemon_logs() {
   done
 
   if [ "$(os_is_macos)" = "true" ]; then
-    local log_path=/tmp/$service.log
-    local error_log_path=/tmp/$service.error.log
+    # local log_path=/tmp/$service.log
+    # local error_log_path=/tmp/$service.error.log
+    local log_path=$(daemon_get_service_log_path $name)
 
     if [ "$is_daemon_logs_follow" = "true" ]; then
-      tail -f $log_path $error_log_path
+      tail -f $log_path
     else
       cat $log_path
-      cat $error_log_path
     fi
     return
   fi
@@ -312,6 +332,7 @@ daemon_create() {
 
   local service_name=$(daemon_get_service_name $name)
   local service_path=$(daemon_get_service_path $name)
+  local servuce_log_path=$(daemon_get_service_log_path $name)
   sudo touch $service_path
 
   if [ "$(os_is_macos)" = "true" ]; then
@@ -325,6 +346,16 @@ daemon_create() {
     sudo tee $script_path >>/dev/null <<EOF
 #!/bin/bash
 export PATH=/usr/local/lib/zmicro/bin:\$PATH
+
+# @TODO
+# override tput
+#   => fix tput: No value for $TERM and no -T specified
+
+tput() {
+  return
+}
+
+export -f tput
 
 ${command}
 EOF
@@ -347,9 +378,9 @@ EOF
       <string>${script_path}</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>/tmp/${service_name}.error.log</string>
+    <string>${servuce_log_path}</string>
     <key>StandardOutPath</key>
-    <string>/tmp/${service_name}.log</string>
+    <string>${servuce_log_path}</string>
     <key>UserName</key>
     <string>$(os_username)</string>
   </dict>
@@ -401,7 +432,11 @@ daemon_remove() {
   fi
 
   if [ "$(os_is_macos)" = "true" ]; then
-    sudo launchctl unload $service_path
+    # 1. stop
+    daemon_stop $name
+    # 2. remove
+    # @TODO
+    sudo rm $service_path
     log_success "daemon serice ${name} removed"
     return
   fi
@@ -434,6 +469,7 @@ daemon_count() {
 export -f daemon_get_service_name
 export -f daemon_parse_service_name
 export -f daemon_get_service_path
+export -f daemon_get_service_log_path
 export -f daemon_is_service_exist
 export -f daemon_has_service
 export -f daemon_is_service
