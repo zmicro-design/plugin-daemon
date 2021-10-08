@@ -196,7 +196,11 @@ daemon_start() {
 
   if [ "$(os_is_macos)" = "true" ]; then
     local service_path=$(daemon_get_service_path $1)
-    sudo launchctl load $service_path
+    sudo launchctl list | grep $service >>/dev/null 2>&1
+    if [ "$?" != "0" ]; then
+      sudo launchctl load $service_path
+    fi
+
     return
   fi
 
