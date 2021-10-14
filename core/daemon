@@ -4,7 +4,7 @@ export DAEMON_SERVICE_LOG_DIR=/var/log/zmicro/daemon
 
 export DAEMON_SERVICE_DIR=/etc/systemd/system
 export DAEMON_PREFIX=zmicro_
-export DEAMON_SUFFIX=.sevice
+export DEAMON_SUFFIX=.service
 
 export DAEMON_SERVICE_DIR_MAC_OS=/Library/LaunchDaemons
 export DAEMON_SERVICE_SCRIPT_DIR_MAC_OS=${DAEMON_SERVICE_DIR_MAC_OS}/com.zcorky.zmicro
@@ -47,6 +47,7 @@ daemon_parse_service_name() {
 
   local remove_dot_service=$(string_remove $service_name $DEAMON_SUFFIX)
   local remove_prefix=$(string_remove $remove_dot_service $DAEMON_PREFIX)
+
   echo $remove_prefix
 }
 
