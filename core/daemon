@@ -2,18 +2,22 @@
 
 export DAEMON_SERVICE_LOG_DIR=/var/log/zmicro/daemon
 
-export DAEMON_SERVICE_DIR=/etc/systemd/system
 export DAEMON_PREFIX=zmicro_
 export DEAMON_SUFFIX=.service
 
-export DAEMON_SERVICE_DIR_MAC_OS=/Library/LaunchDaemons
-export DAEMON_SERVICE_SCRIPT_DIR_MAC_OS=${DAEMON_SERVICE_DIR_MAC_OS}/com.zcorky.zmicro
+export DAEMON_SERVICE_DIR=/etc/systemd/system
+export DAEMON_SERVICE_SCRIPT_DIR=${DAEMON_SERVICE_DIR}/zcorky
+
+# export DAEMON_SERVICE_DIR_MAC_OS=/Library/LaunchDaemons
+# export DAEMON_SERVICE_SCRIPT_DIR_MAC_OS=${DAEMON_SERVICE_DIR_MAC_OS}/com.zcorky.zmicro
 
 # @TODO
 if [ "$(os_is_macos)" = "true" ]; then
-  export DAEMON_SERVICE_DIR=$DAEMON_SERVICE_DIR_MAC_OS
   export DAEMON_PREFIX=com.zcorky.zmicro.
   export DEAMON_SUFFIX=.plist
+
+  export DAEMON_SERVICE_DIR=/Library/LaunchDaemons
+  export DAEMON_SERVICE_SCRIPT_DIR=${DAEMON_SERVICE_DIR}/com.zcorky.zmicro
 fi
 
 if [ ! -d "$DAEMON_SERVICE_LOG_DIR" ]; then
@@ -21,6 +25,10 @@ if [ ! -d "$DAEMON_SERVICE_LOG_DIR" ]; then
 fi
 if [ ! -w "$DAEMON_SERVICE_LOG_DIR" ]; then
   sudo chown -R $USER $DAEMON_SERVICE_LOG_DIR
+fi
+# create script dir
+if [ ! -d $DAEMON_SERVICE_SCRIPT_DIR ]; then
+  sudo mkdir $DAEMON_SERVICE_SCRIPT_DIR
 fi
 
 daemon_get_service_name() {
@@ -61,7 +69,7 @@ daemon_get_service_path() {
   local service=$(daemon_get_service_name $1)
   if [ "$(os_is_macos)" = "true" ]; then
     # echo "/System/Library/LaunchDaemons/${service}.plist"
-    echo "${DAEMON_SERVICE_DIR_MAC_OS}/${service}.plist"
+    echo "${DAEMON_SERVICE_DIR}/${service}.plist"
     return
   fi
 
@@ -340,14 +348,10 @@ daemon_create() {
   local servuce_log_path=$(daemon_get_service_log_path $name)
   sudo touch $service_path
 
-  if [ "$(os_is_macos)" = "true" ]; then
-    # create script dir
-    if [ ! -d $DAEMON_SERVICE_SCRIPT_DIR_MAC_OS ]; then
-      sudo mkdir $DAEMON_SERVICE_SCRIPT_DIR_MAC_OS
-    fi
+  local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$name
 
+  if [ "$(os_is_macos)" = "true" ]; then
     # create script
-    local script_path=$DAEMON_SERVICE_SCRIPT_DIR_MAC_OS/$name
     sudo tee $script_path >>/dev/null <<EOF
 #!/bin/bash
 export PATH=/usr/local/lib/zmicro/bin:\$PATH
@@ -398,6 +402,26 @@ EOF
     return
   fi
 
+  # Linux
+  # create script
+    sudo tee $script_path >>/dev/null <<EOF
+#!/bin/bash
+export PATH=/usr/local/lib/zmicro/bin:\$PATH
+
+# @TODO
+# override tput
+#   => fix tput: No value for $TERM and no -T specified
+
+tput() {
+  return
+}
+
+export -f tput
+
+${command}
+EOF
+    sudo chmod +x $script_path
+
   sudo tee $service_path >>/dev/null <<EOF
 [Unit]
 Description=zmicro service - ${name}
@@ -407,7 +431,7 @@ Description=zmicro service - ${name}
 Environment=ZMICRO_HOME=${ZMICRO_HOME}
 # Environment=ZMICRO_BIN_PATH=${ZMICRO_BIN_PATH}
 Environment=PATH=/usr/local/bin:${ZMICRO_HOME}/bin:${PATH}
-ExecStart=${command}
+ExecStart=${script_path}
 Restart=on-failure
 Type=simple
 
