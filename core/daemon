@@ -345,7 +345,7 @@ daemon_create() {
 
   local service_name=$(daemon_get_service_name $name)
   local service_path=$(daemon_get_service_path $name)
-  local servuce_log_path=$(daemon_get_service_log_path $name)
+  local service_log_path=$(daemon_get_service_log_path $name)
   sudo touch $service_path
 
   local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$name
@@ -387,9 +387,9 @@ EOF
       <string>${script_path}</string>
     </array>
     <key>StandardErrorPath</key>
-    <string>${servuce_log_path}</string>
+    <string>${service_log_path}</string>
     <key>StandardOutPath</key>
-    <string>${servuce_log_path}</string>
+    <string>${service_log_path}</string>
     <key>UserName</key>
     <string>$(os_username)</string>
   </dict>
@@ -465,13 +465,13 @@ daemon_remove() {
     daemon_stop $name
     # 2. remove
     # @TODO
-    sudo rm $service_path
+    sudo rm -f $service_path
     log_success "daemon serice ${name} removed"
     return
   fi
 
   sudo systemctl stop $service_name
-  sudo rm $service_path
+  sudo rm -f $service_path
   sudo systemctl daemon-reload
   log_success "daemon serice ${name} removed"
 }
