@@ -37,7 +37,7 @@ core() {
     fi
   fi
 
-  daemon_status $service ${@:2}
+  daemon_status $service $args
 }
 
 run() {

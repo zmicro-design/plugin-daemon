@@ -1,5 +1,7 @@
 #!/bin/bash
 
+load inquirer
+
 help() {
   echo "Stop a daemon service"
   echo ""
@@ -16,7 +18,29 @@ core() {
     exit 0
   fi
 
-  daemon_stop $@
+  local service=$1
+  local args=${@:2}
+  
+  if [ -z "$service" ]; then
+    local available_services=($(daemon_list))
+    inquirer_select "Select an service ?" available_services service
+  else
+    match() {
+      string_match $1 ^$service
+    }
+
+    local available_services=($(array_filter match $(daemon_list)))
+    local available_count=$(array_length $available_services)
+    if [ $available_count -eq 0 ]; then
+      log_error "no services found"
+    elif [ $available_count -eq 1 ]; then
+      service=$(array_first_element $available_services)
+    else
+      inquirer_select "Select an service ?" available_services service
+    fi
+  fi
+
+  daemon_stop $service $args
 }
 
 run() {
