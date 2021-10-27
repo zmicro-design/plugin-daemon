@@ -80,7 +80,7 @@ help() {
   echo "Create a daemon service"
   echo ""
   echo "Usage:"
-  echo "  zdaemon create [options] [app_name]"
+  echo "  zdaemon create [options] [name] [commands...]"
   echo ""
   echo "Options:"
   echo "  -f, --force-recreate  Force recreate service"
