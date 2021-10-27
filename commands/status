@@ -20,20 +20,20 @@ core() {
   
   if [ -z "$service" ]; then
     local available_services=($(daemon_list))
-    inquirer_select "Select an service ?" available_services service
+    inquirer::select "Select an service ?" available_services service
   else
     match() {
-      string_match $1 ^$service
+      string::match $1 ^$service
     }
 
-    local available_services=($(array_filter match $(daemon_list)))
-    local available_count=$(array_length $available_services)
+    local available_services=($(array::filter match $(daemon_list)))
+    local available_count=$(array::length $available_services)
     if [ $available_count -eq 0 ]; then
-      log_error "no services found"
+      log::error "no services found"
     elif [ $available_count -eq 1 ]; then
-      service=$(array_first_element $available_services)
+      service=$(array::first_element $available_services)
     else
-      inquirer_select "Select an service ?" available_services service
+      inquirer::select "Select an service ?" available_services service
     fi
   fi
 

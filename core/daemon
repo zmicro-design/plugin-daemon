@@ -12,7 +12,7 @@ export DAEMON_SERVICE_SCRIPT_DIR=${DAEMON_SERVICE_DIR}/zcorky
 # export DAEMON_SERVICE_SCRIPT_DIR_MAC_OS=${DAEMON_SERVICE_DIR_MAC_OS}/com.zcorky.zmicro
 
 # @TODO
-if [ "$(os_is_macos)" = "true" ]; then
+if [ "$(os::is_macos)" = "true" ]; then
   export DAEMON_PREFIX=com.zcorky.zmicro.
   export DEAMON_SUFFIX=.plist
 
@@ -34,11 +34,11 @@ fi
 daemon_get_service_name() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     echo "com.zcorky.zmicro.${name}"
     return
   fi
@@ -49,25 +49,25 @@ daemon_get_service_name() {
 daemon_parse_service_name() {
   local service_name=$1
   if [ "$service_name" = "" ]; then
-    log_error "[daemon_parse_service_name] service_name is required"
+    log::error "[daemon_parse_service_name] service_name is required"
     exit 1
   fi
 
-  local remove_dot_service=$(string_remove $service_name $DEAMON_SUFFIX)
-  local remove_prefix=$(string_remove $remove_dot_service $DAEMON_PREFIX)
+  local remove_dot_service=$(string::remove $service_name $DEAMON_SUFFIX)
+  local remove_prefix=$(string::remove $remove_dot_service $DAEMON_PREFIX)
 
   echo $remove_prefix
 }
 
-daemon_get_service_path() {
+daemon_service::get_path() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     # echo "/System/Library/LaunchDaemons/${service}.plist"
     echo "${DAEMON_SERVICE_DIR}/${service}.plist"
     return
@@ -79,7 +79,7 @@ daemon_get_service_path() {
 daemon_get_service_log_path() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
@@ -90,11 +90,11 @@ daemon_get_service_log_path() {
 daemon_is_service_exist() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "[daemon_is_service_exist] name is required"
+    log::error "[daemon_is_service_exist] name is required"
     exit 1
   fi
 
-  local service_path=$(daemon_get_service_path $name)
+  local service_path=$(daemon_service::get_path $name)
   if [ ! -f $service_path ]; then
     echo "false"
   else
@@ -106,11 +106,11 @@ daemon_is_service() {
   # zmicro_vscode_protect.service
   local service_name=$1
   if [ "$service_name" = "" ]; then
-    log_error "[daemon_is_service] service_name is required"
+    log::error "[daemon_is_service] service_name is required"
     exit 1
   fi
 
-  echo "$(string_match $service_name ^${DAEMON_PREFIX})"
+  echo "$(string::match $service_name ^${DAEMON_PREFIX})"
 }
 
 daemon_has_service() {
@@ -120,13 +120,13 @@ daemon_has_service() {
 daemon_logs() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
@@ -135,12 +135,12 @@ daemon_logs() {
     local value=$2
     case $key in
     -f | --follow)
-      set_var is_daemon_logs_follow true
+      os::set_var is_daemon_logs_follow true
       shift
       ;;
     *)
-      if [ "$(string_match $key ^-)" = "true" ]; then
-        log_error "[daemon_logs] unknown parameter \"$key\""
+      if [ "$(string::match $key ^-)" = "true" ]; then
+        log::error "[daemon_logs] unknown parameter \"$key\""
         exit 1
       fi
 
@@ -149,7 +149,7 @@ daemon_logs() {
     esac
   done
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     # local log_path=/tmp/$service.log
     # local error_log_path=/tmp/$service.error.log
     local log_path=$(daemon_get_service_log_path $name)
@@ -172,17 +172,17 @@ daemon_logs() {
 daemon_status() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     sudo launchctl list | grep $service
     return
   fi
@@ -193,18 +193,18 @@ daemon_status() {
 daemon_start() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
-    local service_path=$(daemon_get_service_path $1)
+  if [ "$(os::is_macos)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $1)
     sudo launchctl list | grep $service >>/dev/null 2>&1
     if [ "$?" != "0" ]; then
       sudo launchctl load $service_path
@@ -219,18 +219,18 @@ daemon_start() {
 daemon_stop() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
-    local service_path=$(daemon_get_service_path $1)
+  if [ "$(os::is_macos)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $1)
     sudo launchctl list | grep $service >>/dev/null 2>&1
     if [ "$?" = "0" ]; then
       sudo launchctl unload $service_path
@@ -244,17 +244,17 @@ daemon_stop() {
 daemon_restart() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     daemon_stop $1
     daemon_start $1
     return
@@ -266,17 +266,17 @@ daemon_restart() {
 daemon_reload() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     daemon_restart $1
     return
   fi
@@ -287,18 +287,18 @@ daemon_reload() {
 daemon_enable() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
-    local service_path=$(daemon_get_service_path $1)
+  if [ "$(os::is_macos)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $1)
     sudo launchctl enable $service_path
     return
   fi
@@ -309,18 +309,18 @@ daemon_enable() {
 daemon_disable() {
   local name=$1
   if [ "$name" = "" ]; then
-    log_error "name is required"
+    log::error "name is required"
     exit 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
-    log_error "daemon service($1) not found"
+    log::error "daemon service($1) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
-    local service_path=$(daemon_get_service_path $1)
+  if [ "$(os::is_macos)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $1)
     sudo launchctl disable $service_path
     return
   fi
@@ -333,24 +333,24 @@ daemon_create() {
   local command=${@:2}
 
   if [ "$name" = "" ] || [ "$command" = "" ]; then
-    log_error "daemon service and command are required"
+    log::error "daemon service and command are required"
     exit 1
   fi
 
   if [ "$(daemon_is_service_exist $name)" = "true" ]; then
-    local service_path=$(daemon_get_service_path $name)
-    log_error "found daemon service(${name}), please it manual: ${service_path}"
+    local service_path=$(daemon_service::get_path $name)
+    log::error "found daemon service(${name}), please it manual: ${service_path}"
     exit 1
   fi
 
   local service_name=$(daemon_get_service_name $name)
-  local service_path=$(daemon_get_service_path $name)
+  local service_path=$(daemon_service::get_path $name)
   local service_log_path=$(daemon_get_service_log_path $name)
   sudo touch $service_path
 
   local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$name
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     # create script
     sudo tee $script_path >>/dev/null <<EOF
 #!/bin/bash
@@ -391,14 +391,14 @@ EOF
     <key>StandardOutPath</key>
     <string>${service_log_path}</string>
     <key>UserName</key>
-    <string>$(os_username)</string>
+    <string>$(os::username)</string>
   </dict>
 </plist>
 EOF
 
     # start
     sudo launchctl load $service_path
-    log_success "daemon serice ${name} created"
+    log::success "daemon serice ${name} created"
     return
   fi
 
@@ -442,42 +442,42 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl start $service_name
 
-  log_success "daemon serice ${name} created"
+  log::success "daemon serice ${name} created"
 }
 
 daemon_remove() {
   local name=$1
 
   if [ "$name" = "" ]; then
-    log_error "daemon service and command are required"
+    log::error "daemon service and command are required"
     exit 1
   fi
 
   local service_name=$(daemon_get_service_name $name)
-  local service_path=$(daemon_get_service_path $name)
+  local service_path=$(daemon_service::get_path $name)
   if [ "$(daemon_is_service_exist $name)" = "false" ]; then
-    log_error "daemon service(${name}) not found"
+    log::error "daemon service(${name}) not found"
     exit 1
   fi
 
-  if [ "$(os_is_macos)" = "true" ]; then
+  if [ "$(os::is_macos)" = "true" ]; then
     # 1. stop
     daemon_stop $name
     # 2. remove
     # @TODO
     sudo rm -f $service_path
-    log_success "daemon serice ${name} removed"
+    log::success "daemon serice ${name} removed"
     return
   fi
 
   sudo systemctl stop $service_name
   sudo rm -f $service_path
   sudo systemctl daemon-reload
-  log_success "daemon serice ${name} removed"
+  log::success "daemon serice ${name} removed"
 }
 
 daemon_list() {
-  local service_files=$(array_filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
+  local service_files=$(array::filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
 
   parser() {
     local index=$1
@@ -486,18 +486,18 @@ daemon_list() {
     echo $service_name
   }
 
-  array_each parser $service_files
+  array::each parser $service_files
 }
 
 daemon_count() {
   local services=$(daemon_list $@)
 
-  array_length $services
+  array::length $services
 }
 
 export -f daemon_get_service_name
 export -f daemon_parse_service_name
-export -f daemon_get_service_path
+export -f daemon_service::get_path
 export -f daemon_get_service_log_path
 export -f daemon_is_service_exist
 export -f daemon_has_service

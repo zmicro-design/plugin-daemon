@@ -22,7 +22,7 @@ core() {
     local index=$1
     local service_name=$2
 
-    log "    $index $(color_success "$service_name")"
+    log "    $index $(color::success "$service_name")"
   }
 
   local services_count=$(daemon_count)
@@ -34,7 +34,7 @@ core() {
   log "daemon services: $services_count"
   log ""
 
-  array_each print $services
+  array::each print $services
 }
 
 run() {
