@@ -330,7 +330,8 @@ daemon_disable() {
 
 daemon_create() {
   local name=$1
-  local command=${@:2}
+  local is_run_at_load=$2
+  local command=${@:3}
 
   if [ "$name" = "" ] || [ "$command" = "" ]; then
     log::error "daemon service and command are required"
@@ -371,7 +372,33 @@ EOF
     sudo chmod +x $script_path
 
     # create launchctl plist
-    sudo tee $service_path >>/dev/null <<EOF
+    if [ "$is_run_at_load" = "true" ]; then
+      sudo tee $service_path >>/dev/null <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Disabled</key>
+    <false/>
+    <key>Label</key>
+    <string>${service_name}</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProgramArguments</key>
+    <array>
+      <string>${script_path}</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>${service_log_path}</string>
+    <key>StandardOutPath</key>
+    <string>${service_log_path}</string>
+    <key>UserName</key>
+    <string>$(os::username)</string>
+  </dict>
+</plist>
+EOF
+    else
+      sudo tee $service_path >>/dev/null <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -395,8 +422,10 @@ EOF
   </dict>
 </plist>
 EOF
+    fi
 
     # start
+    # sudo launchctl enable $service_path
     sudo launchctl load $service_path
     log::success "daemon serice ${name} created"
     return

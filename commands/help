@@ -12,7 +12,7 @@ help() {
   echo "    restart   Restart daemon service"
   echo "    status    Status daemon service"
   echo "    logs      Get daemon service logs"
-  echo "    reaload   Reload daemon service"
+  echo "    reload   Reload daemon service"
   echo "    enable    Enable daemon service when system start up"
   echo "    disable   Disable daemon service when system start up"
 }
