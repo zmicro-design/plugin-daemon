@@ -432,7 +432,8 @@ Environment=ZMICRO_HOME=${ZMICRO_HOME}
 # Environment=ZMICRO_BIN_PATH=${ZMICRO_BIN_PATH}
 Environment=PATH=/usr/local/bin:${ZMICRO_HOME}/bin:${PATH}
 ExecStart=${script_path}
-Restart=on-failure
+Restart=always
+RestartSec=5
 Type=simple
 
 [Install]
