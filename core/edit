@@ -1,0 +1,19 @@
+#!/bin/bash
+
+daemon::edit_script() {
+  local service_name=$1
+  if [ -z "$service_name" ]; then
+    log::error "[$(timestamp)] service name is required"
+    return 1
+  fi
+
+  local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$service_name
+  if [ ! -f "$script_path" ]; then
+    log::error "[$(timestamp)] service ($service_name) script not found at: $script_path"
+    return 1
+  fi
+
+  sudo vim $script_path
+}
+
+export -f daemon::edit_script

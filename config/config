@@ -1,0 +1,32 @@
+export PLUGIN_DAEMON_NAME="daemon"
+
+export DAEMON_SERVICE_LOG_DIR=/var/log/zmicro/daemon
+
+export DAEMON_PREFIX=zmicro_
+export DEAMON_SUFFIX=.service
+
+export DAEMON_SERVICE_DIR=/etc/systemd/system
+export DAEMON_SERVICE_SCRIPT_DIR=${DAEMON_SERVICE_DIR}/zcorky
+
+# export DAEMON_SERVICE_DIR_MAC_OS=/Library/LaunchDaemons
+# export DAEMON_SERVICE_SCRIPT_DIR_MAC_OS=${DAEMON_SERVICE_DIR_MAC_OS}/com.zcorky.zmicro
+
+# @TODO
+if [ "$(os::is_macos)" = "true" ]; then
+  export DAEMON_PREFIX=com.zcorky.zmicro.
+  export DEAMON_SUFFIX=.plist
+
+  export DAEMON_SERVICE_DIR=/Library/LaunchDaemons
+  export DAEMON_SERVICE_SCRIPT_DIR=${DAEMON_SERVICE_DIR}/com.zcorky.zmicro
+fi
+
+if [ ! -d "$DAEMON_SERVICE_LOG_DIR" ]; then
+  sudo mkdir -p $DAEMON_SERVICE_LOG_DIR
+fi
+if [ ! -w "$DAEMON_SERVICE_LOG_DIR" ]; then
+  sudo chown -R $USER $DAEMON_SERVICE_LOG_DIR
+fi
+# create script dir
+if [ ! -d $DAEMON_SERVICE_SCRIPT_DIR ]; then
+  sudo mkdir $DAEMON_SERVICE_SCRIPT_DIR
+fi
