@@ -1,0 +1,25 @@
+#!/bin/bash
+
+daemon_restart() {
+  local name=$1
+  if [ "$name" = "" ]; then
+    log::error "name is required"
+    exit 1
+  fi
+
+  local service=$(daemon_get_service_name $1)
+  if [ "$(daemon_is_service_exist $1)" = "false" ]; then
+    log::error "daemon service($1) not found"
+    exit 1
+  fi
+
+  if [ "$(os::is_macos)" = "true" ]; then
+    daemon_stop $1
+    daemon_start $1
+    return
+  fi
+
+  sudo systemctl restart $service
+}
+
+export -f daemon_restart

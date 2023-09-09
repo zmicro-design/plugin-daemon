@@ -1,0 +1,25 @@
+#!/bin/bash
+
+daemon_disable() {
+  local name=$1
+  if [ "$name" = "" ]; then
+    log::error "name is required"
+    exit 1
+  fi
+
+  local service=$(daemon_get_service_name $1)
+  if [ "$(daemon_is_service_exist $1)" = "false" ]; then
+    log::error "daemon service($1) not found"
+    exit 1
+  fi
+
+  if [ "$(os::is_macos)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $1)
+    sudo launchctl disable $service_path
+    return
+  fi
+
+  sudo systemctl disable $service
+}
+
+export -f daemon_disable

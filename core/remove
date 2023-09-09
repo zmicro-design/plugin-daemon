@@ -1,0 +1,34 @@
+#!/bin/bash
+
+daemon_remove() {
+  local name=$1
+
+  if [ "$name" = "" ]; then
+    log::error "daemon service and command are required"
+    exit 1
+  fi
+
+  local service_name=$(daemon_get_service_name $name)
+  local service_path=$(daemon_service::get_path $name)
+  if [ "$(daemon_is_service_exist $name)" = "false" ]; then
+    log::error "daemon service(${name}) not found"
+    exit 1
+  fi
+
+  if [ "$(os::is_macos)" = "true" ]; then
+    # 1. stop
+    daemon_stop $name
+    # 2. remove
+    # @TODO
+    sudo rm -f $service_path
+    log::success "daemon serice ${name} removed"
+    return
+  fi
+
+  sudo systemctl stop $service_name
+  sudo rm -f $service_path
+  sudo systemctl daemon-reload
+  log::success "daemon serice ${name} removed"
+}
+
+export -f daemon_remove

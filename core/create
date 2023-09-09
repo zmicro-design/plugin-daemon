@@ -1,0 +1,152 @@
+#!/bin/bash
+
+daemon_create() {
+  local name=$1
+  local is_run_at_load=$2
+  local command=${@:3}
+
+  if [ "$name" = "" ] || [ "$command" = "" ]; then
+    log::error "daemon service and command are required"
+    exit 1
+  fi
+
+  if [ "$(daemon_is_service_exist $name)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $name)
+    log::error "found daemon service(${name}), please it manual: ${service_path}"
+    exit 1
+  fi
+
+  local service_name=$(daemon_get_service_name $name)
+  local service_path=$(daemon_service::get_path $name)
+  local service_log_path=$(daemon_get_service_log_path $name)
+  sudo touch $service_path
+
+  local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$name
+
+  if [ "$(os::is_macos)" = "true" ]; then
+    # create script
+    sudo tee $script_path >>/dev/null <<EOF
+#!/bin/bash
+export PATH=/usr/local/lib/zmicro/bin:\$PATH
+
+# @TODO
+# override tput
+#   => fix tput: No value for $TERM and no -T specified
+
+tput() {
+  return
+}
+
+export -f tput
+
+${command}
+EOF
+    sudo chmod +x $script_path
+
+    # create launchctl plist
+    if [ "$is_run_at_load" = "true" ]; then
+      sudo tee $service_path >>/dev/null <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Disabled</key>
+    <false/>
+    <key>Label</key>
+    <string>${service_name}</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>ProgramArguments</key>
+    <array>
+      <string>${script_path}</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>${service_log_path}</string>
+    <key>StandardOutPath</key>
+    <string>${service_log_path}</string>
+    <key>UserName</key>
+    <string>$(os::username)</string>
+  </dict>
+</plist>
+EOF
+    else
+      sudo tee $service_path >>/dev/null <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+  <dict>
+    <key>Disabled</key>
+    <false/>
+    <key>Label</key>
+    <string>${service_name}</string>
+    <key>KeepAlive</key>
+    <true/>
+    <key>ProgramArguments</key>
+    <array>
+      <string>${script_path}</string>
+    </array>
+    <key>StandardErrorPath</key>
+    <string>${service_log_path}</string>
+    <key>StandardOutPath</key>
+    <string>${service_log_path}</string>
+    <key>UserName</key>
+    <string>$(os::username)</string>
+  </dict>
+</plist>
+EOF
+    fi
+
+    # start
+    # sudo launchctl enable $service_path
+    sudo launchctl load $service_path
+    log::success "daemon serice ${name} created"
+    return
+  fi
+
+  # Linux
+  # create script
+    sudo tee $script_path >>/dev/null <<EOF
+#!/bin/bash
+export PATH=/usr/local/lib/zmicro/bin:\$PATH
+
+# @TODO
+# override tput
+#   => fix tput: No value for $TERM and no -T specified
+
+tput() {
+  return
+}
+
+export -f tput
+
+${command}
+EOF
+    sudo chmod +x $script_path
+
+  sudo tee $service_path >>/dev/null <<EOF
+[Unit]
+Description=zmicro service - ${name}
+
+[Service]
+# EnvironmentFile=$HOME/.bashrc
+Environment=ZMICRO_HOME=${ZMICRO_HOME}
+# Environment=ZMICRO_BIN_PATH=${ZMICRO_BIN_PATH}
+Environment=PATH=/usr/local/bin:${ZMICRO_HOME}/bin:${PATH}
+ExecStart=${script_path}
+ExecReload=/bin/kill -s HUP \$MAINPID
+ExecStop=/bin/kill -s TERM \$MAINPID
+Restart=always
+RestartSec=5
+Type=simple
+
+[Install]
+WantedBy=multi-user.target 
+EOF
+
+  sudo systemctl daemon-reload
+  sudo systemctl start $service_name
+
+  log::success "daemon serice ${name} created"
+}
+
+export -f daemon_create

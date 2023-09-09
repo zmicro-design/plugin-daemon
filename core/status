@@ -1,0 +1,24 @@
+#!/bin/bash
+
+daemon_status() {
+  local name=$1
+  if [ "$name" = "" ]; then
+    log::error "name is required"
+    exit 1
+  fi
+
+  local service=$(daemon_get_service_name $1)
+  if [ "$(daemon_is_service_exist $1)" = "false" ]; then
+    log::error "daemon service($1) not found"
+    exit 1
+  fi
+
+  if [ "$(os::is_macos)" = "true" ]; then
+    sudo launchctl list | grep $service
+    return
+  fi
+
+  sudo systemctl status $service
+}
+
+export -f daemon_status
