@@ -196,8 +196,8 @@ daemon::create_with_sysv() {
 ### END INIT INFO
 
 cmd="${script_path}"
-
-name=\$(basename \$(readlink -f \$0))
+#
+name="${name}"
 pid_file="/var/run/\$name.pid"
 stdout_log="${service_log_path}"
 stderr_log="${service_log_path}"
@@ -218,20 +218,20 @@ is_running() {
 case "\$1" in
     start)
         if is_running; then
-            echo "Already started"
+            echo "already started"
         else
-            echo "Starting \$name"
+            echo "starting \$name"
             \$cmd >> "\$stdout_log" 2>> "\$stderr_log" &
             echo \$! > "\$pid_file"
             if ! is_running; then
-                echo "Unable to start, see \$stdout_log and \$stderr_log"
+                echo "unable to start, see \$stdout_log and \$stderr_log"
                 exit 1
             fi
         fi
     ;;
     stop)
         if is_running; then
-            echo -n "Stopping \$name.."
+            echo -n "stopping \$name.."
             kill \$(get_pid)
             for i in \$(seq 1 10)
             do
@@ -243,36 +243,36 @@ case "\$1" in
             done
             echo
             if is_running; then
-                echo "Not stopped; may still be shutting down or shutdown may have failed"
+                echo "not stopped; may still be shutting down or shutdown may have failed"
                 exit 1
             else
-                echo "Stopped"
+                echo "stopped"
                 if [ -f "\$pid_file" ]; then
                     rm "\$pid_file"
                 fi
             fi
         else
-            echo "Not running"
+            echo "not running"
         fi
     ;;
     restart)
         \$0 stop
         if is_running; then
-            echo "Unable to stop, will not attempt to start"
+            echo "unable to stop, will not attempt to start"
             exit 1
         fi
         \$0 start
     ;;
     status)
         if is_running; then
-            echo "Running"
+            echo "running"
         else
-            echo "Stopped"
+            echo "stopped"
             exit 1
         fi
     ;;
     *)
-    echo "Usage: \$0 {start|stop|restart|status}"
+    echo "usage: \$0 {start|stop|restart|status}"
     exit 1
     ;;
 esac
