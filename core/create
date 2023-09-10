@@ -57,14 +57,20 @@ EOF
 
   # Linux - Systemd
   if [ "$(os::has_command systemctl)" = "true" ]; then
-    daemon::create_with_systemd "$service_name" "$service_path" "$script_path" "$service_log_path"
-    return
+    sudo systemctl status >> /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+      daemon::create_with_systemd "$service_name" "$service_path" "$script_path" "$service_log_path"
+      return
+    fi
   fi
 
   # Linux - SysV
-  if [ "$(os::has_command chkconfig)" = "true" ]; then
-    daemon::create_with_sysv "$service_name" "$service_path" "$script_path" "$service_log_path"
-    return
+  if [ "$(os::has_command service)" = "true" ]; then
+    sudo service --status-all >> /dev/null 2>&1
+    if [ "$?" = "0" ]; then
+      daemon::create_with_sysv "$service_name" "$service_path" "$script_path" "$service_log_path"
+      return
+    fi
   fi
 
   log::error "not support Linux Distribution $(uname -a)"
@@ -272,6 +278,12 @@ case "\$1" in
 esac
 exit 0
 EOF
+
+  sudo chmod +x $service_path
+  sudo service $service_name start
+
+  log::success "daemon serice ${name} created"
+}
 
 export -f daemon::create
 
