@@ -32,23 +32,31 @@ daemon::logs() {
     esac
   done
 
-  if [ "$(os::is_macos)" = "true" ]; then
-    # local log_path=/tmp/$service.log
-    # local error_log_path=/tmp/$service.error.log
-    local log_path=$(daemon_get_service_log_path $name)
+  # if [ "$(os::is_macos)" = "true" ]; then
+  #   # local log_path=/tmp/$service.log
+  #   # local error_log_path=/tmp/$service.error.log
+  #   local log_path=$(daemon_get_service_log_path $name)
 
-    if [ "$is_daemon_logs_follow" = "true" ]; then
-      tail -f $log_path
-    else
-      cat $log_path
-    fi
-    return
-  fi
+  #   if [ "$is_daemon_logs_follow" = "true" ]; then
+  #     tail -f $log_path
+  #   else
+  #     cat $log_path
+  #   fi
+  #   return
+  # fi
+
+  # if [ "$is_daemon_logs_follow" = "true" ]; then
+  #   sudo journalctl -u $service -f
+  # else
+  #   sudo journalctl -u $service -r
+  # fi
+
+  local log_path=$(daemon_get_service_log_path $name)
 
   if [ "$is_daemon_logs_follow" = "true" ]; then
-    sudo journalctl -u $service -f
+    tail -f $log_path
   else
-    sudo journalctl -u $service -r
+    cat $log_path
   fi
 }
 
