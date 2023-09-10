@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_reload() {
+daemon::reload() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -14,11 +14,11 @@ daemon_reload() {
   fi
 
   if [ "$(os::is_macos)" = "true" ]; then
-    daemon_restart $1
+    daemon::restart $1
     return
   fi
 
   sudo systemctl reload $service
 }
 
-export -f daemon_reload
+export -f daemon::reload

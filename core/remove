@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_remove() {
+daemon::remove() {
   local name=$1
 
   if [ "$name" = "" ]; then
@@ -17,7 +17,7 @@ daemon_remove() {
 
   if [ "$(os::is_macos)" = "true" ]; then
     # 1. stop
-    daemon_stop $name
+    daemon::stop $name
     # 2. remove
     # @TODO
     sudo rm -f $service_path
@@ -31,4 +31,4 @@ daemon_remove() {
   log::success "daemon serice ${name} removed"
 }
 
-export -f daemon_remove
+export -f daemon::remove

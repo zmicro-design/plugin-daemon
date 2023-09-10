@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_create() {
+daemon::create() {
   local name=$1
   local is_run_at_load=$2
   local command=${@:3}
@@ -149,4 +149,4 @@ EOF
   log::success "daemon serice ${name} created"
 }
 
-export -f daemon_create
+export -f daemon::create

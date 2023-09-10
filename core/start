@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_start() {
+daemon::start() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -26,4 +26,4 @@ daemon_start() {
   sudo systemctl start $service
 }
 
-export -f daemon_start
+export -f daemon::start

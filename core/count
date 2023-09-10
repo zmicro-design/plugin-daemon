@@ -1,9 +1,9 @@
 #!/bin/bash
 
-daemon_count() {
-  local services=$(daemon_list $@)
+daemon::count() {
+  local services=$(daemon::list $@)
 
   array::length $services
 }
 
-export -f daemon_count
+export -f daemon::count

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_disable() {
+daemon::disable() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -22,4 +22,4 @@ daemon_disable() {
   sudo systemctl disable $service
 }
 
-export -f daemon_disable
+export -f daemon::disable

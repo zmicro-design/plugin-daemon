@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_restart() {
+daemon::restart() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -14,12 +14,12 @@ daemon_restart() {
   fi
 
   if [ "$(os::is_macos)" = "true" ]; then
-    daemon_stop $1
-    daemon_start $1
+    daemon::stop $1
+    daemon::start $1
     return
   fi
 
   sudo systemctl restart $service
 }
 
-export -f daemon_restart
+export -f daemon::restart

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_stop() {
+daemon::stop() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -26,4 +26,4 @@ daemon_stop() {
 }
 
 
-export -f daemon_stop
+export -f daemon::stop

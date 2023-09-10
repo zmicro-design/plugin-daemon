@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_status() {
+daemon::status() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -21,4 +21,4 @@ daemon_status() {
   sudo systemctl status $service
 }
 
-export -f daemon_status
+export -f daemon::status

@@ -79,10 +79,10 @@ create() {
   fi
 
   if [ "$is_daemon_force_recreate" = "true" ]; then
-    daemon_remove $service_name
+    daemon::remove $service_name
   fi
 
-  daemon_create $service_name $is_run_at_load $service_command
+  daemon::create $service_name $is_run_at_load $service_command
 }
 
 help() {

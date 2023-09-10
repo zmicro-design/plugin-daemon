@@ -22,14 +22,14 @@ core() {
   local args=${@:2}
   
   if [ -z "$service" ]; then
-    local available_services=($(daemon_list))
+    local available_services=($(daemon::list))
     inquirer::select "Select an service ?" available_services service
   else
     match() {
       string::match $1 ^$service
     }
 
-    local available_services=($(array::filter match $(daemon_list)))
+    local available_services=($(array::filter match $(daemon::list)))
     local available_count=$(array::length $available_services)
     if [ $available_count -eq 0 ]; then
       log::error "no services found"
@@ -40,7 +40,7 @@ core() {
     fi
   fi
 
-  daemon_disable $service $args
+  daemon::disable $service $args
 }
 
 run() {

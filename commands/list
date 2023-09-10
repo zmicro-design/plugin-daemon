@@ -16,7 +16,7 @@ core() {
     exit 0
   fi
 
-  local services=$(daemon_list $@)
+  local services=$(daemon::list $@)
 
   print() {
     local index=$1
@@ -25,7 +25,7 @@ core() {
     log "    $index $(color::success "$service_name")"
   }
 
-  local services_count=$(daemon_count)
+  local services_count=$(daemon::count)
   if [ $services_count -eq 0 ]; then
     log "    (no avaliable services)"
     exit 0

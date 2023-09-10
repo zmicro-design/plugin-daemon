@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_logs() {
+daemon::logs() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
@@ -23,7 +23,7 @@ daemon_logs() {
       ;;
     *)
       if [ "$(string::match $key ^-)" = "true" ]; then
-        log::error "[daemon_logs] unknown parameter \"$key\""
+        log::error "[daemon::logs] unknown parameter \"$key\""
         exit 1
       fi
 
@@ -52,4 +52,4 @@ daemon_logs() {
   fi
 }
 
-export -f daemon_logs
+export -f daemon::logs

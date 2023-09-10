@@ -1,6 +1,6 @@
 #!/bin/bash
 
-daemon_list() {
+daemon::list() {
   local service_files=$(array::filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
 
   parser() {
@@ -13,4 +13,4 @@ daemon_list() {
   array::each parser $service_files
 }
 
-export -f daemon_list
+export -f daemon::list
