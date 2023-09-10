@@ -15,19 +15,31 @@ daemon::remove() {
     exit 1
   fi
 
+  # 2. remove
+  sudo rm -f $service_path
+
   if [ "$(os::is_macos)" = "true" ]; then
     # 1. stop
     daemon::stop $name
-    # 2. remove
-    # @TODO
-    sudo rm -f $service_path
     log::success "daemon serice ${name} removed"
     return
   fi
 
-  sudo systemctl stop $service_name
-  sudo rm -f $service_path
-  sudo systemctl daemon-reload
+  # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl stop $service_name
+      sudo systemctl daemon-reload
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    sudo service $name stop
+    return $?
+  fi
+
   log::success "daemon serice ${name} removed"
 }
 

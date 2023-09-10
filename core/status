@@ -4,21 +4,37 @@ daemon::status() {
   local name=$1
   if [ "$name" = "" ]; then
     log::error "name is required"
-    exit 1
+    return 1
   fi
 
   local service=$(daemon_get_service_name $1)
   if [ "$(daemon_is_service_exist $1)" = "false" ]; then
     log::error "daemon service($1) not found"
-    exit 1
+    return 1
   fi
 
+  # launch
   if [ "$(os::is_macos)" = "true" ]; then
     sudo launchctl list | grep $service
-    return
+    return $?
   fi
 
-  sudo systemctl status $service
+  # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl status $service
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    sudo service $name status
+    return $?
+  fi
+
+  log::error "unsupported os"
+  return 1
 }
 
 export -f daemon::status

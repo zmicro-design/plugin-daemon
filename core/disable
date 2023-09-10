@@ -19,7 +19,23 @@ daemon::disable() {
     return
   fi
 
-  sudo systemctl disable $service
+   # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl disable $service
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $name)
+    sudo rm -f /etc/init.d/$name
+    return $?
+  fi
+
+  log::error "unsupported os"
+  return 1
 }
 
 export -f daemon::disable

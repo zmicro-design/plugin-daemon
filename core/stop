@@ -22,7 +22,22 @@ daemon::stop() {
     return
   fi
 
-  sudo systemctl stop $service
+  # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl stop $service
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    sudo service $name stop
+    return $?
+  fi
+
+  log::error "unsupported os"
+  return 1
 }
 
 

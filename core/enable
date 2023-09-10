@@ -19,7 +19,23 @@ daemon::enable() {
     return
   fi
 
-  sudo systemctl enable $service
+  # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl enable $service
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    local service_path=$(daemon_service::get_path $name)
+    sudo ln -sf $service_path /etc/init.d/$name
+    return $?
+  fi
+
+  log::error "unsupported os"
+  return 1
 }
 
 export -f daemon::enable

@@ -280,7 +280,8 @@ exit 0
 EOF
 
   sudo chmod +x $service_path
-  sudo service $service_name start
+  sudo ln -sf $service_path /etc/init.d/$name
+  sudo service $name start
 
   log::success "daemon serice ${name} created"
 }

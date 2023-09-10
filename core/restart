@@ -19,7 +19,22 @@ daemon::restart() {
     return
   fi
 
-  sudo systemctl restart $service
+  # systemd
+  if [ "$(os::has_command systemd)" = "true" ]; then
+    if [ "$(os::is_docker)" != "true" ]; then
+      sudo systemctl restart $service
+      return $?
+    fi
+  fi
+
+  # sysv
+  if [ "$(os::has_command service)" = "true" ]; then
+    sudo service $name restart
+    return $?
+  fi
+
+  log::error "unsupported os"
+  return 1
 }
 
 export -f daemon::restart
