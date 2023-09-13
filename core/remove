@@ -26,7 +26,7 @@ daemon::remove() {
   fi
 
   # systemd
-  if [ "$(os::has_command systemd)" = "true" ]; then
+  if [ "$(os::has_command systemctl)" = "true" ]; then
     if [ "$(os::is_docker)" != "true" ]; then
       sudo systemctl stop $service_name
       sudo systemctl daemon-reload
