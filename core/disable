@@ -14,9 +14,8 @@ daemon::disable() {
   fi
 
   if [ "$(os::is_macos)" = "true" ]; then
-    local service_path=$(daemon_service::get_path $1)
-    sudo launchctl disable $service_path
-    return
+    sudo launchctl disable system/$service
+    return $?
   fi
 
    # systemd

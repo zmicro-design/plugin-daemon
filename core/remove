@@ -10,25 +10,55 @@ daemon::remove() {
 
   local service_name=$(daemon_get_service_name $name)
   local service_path=$(daemon_service::get_path $name)
-  if [ "$(daemon_is_service_exist $name)" = "false" ]; then
+  local script_path=$DAEMON_SERVICE_SCRIPT_DIR/$name
+  local has_service_file="false"
+  local has_script_file="false"
+  if [ -f "$service_path" ]; then
+    has_service_file="true"
+  fi
+  if [ -f "$script_path" ]; then
+    has_script_file="true"
+  fi
+
+  if [ "$has_service_file" = "false" ] && [ "$has_script_file" = "false" ]; then
     log::error "daemon service(${name}) not found"
     exit 1
   fi
 
-  # 2. remove
-  sudo rm -f $service_path
-
   if [ "$(os::is_macos)" = "true" ]; then
-    # 1. stop
-    daemon::stop $name
+    # stop before removing files, otherwise daemon::stop may fail on existence checks
+    if [ "$has_service_file" = "true" ]; then
+      daemon::stop $name
+    else
+      # cleanup loaded job even when plist file is already missing
+      sudo launchctl remove $service_name >>/dev/null 2>&1
+    fi
+
+    sudo launchctl disable system/$service_name >>/dev/null 2>&1
+    sudo rm -f "$service_path"
+    sudo rm -f "$script_path"
     log::success "daemon serice ${name} removed"
     return
   fi
 
+  # stop before remove for linux too
+  if [ "$has_service_file" = "true" ]; then
+    if [ "$(os::has_command systemctl)" = "true" ]; then
+      if [ "$(os::is_docker)" != "true" ]; then
+        sudo systemctl stop $service_name
+      fi
+    elif [ "$(os::has_command service)" = "true" ]; then
+      sudo service $name stop
+    fi
+  fi
+
+  # remove service/script files
+  sudo rm -f "$service_path"
+  sudo rm -f "$script_path"
+
   # systemd
   if [ "$(os::has_command systemctl)" = "true" ]; then
     if [ "$(os::is_docker)" != "true" ]; then
-      sudo systemctl stop $service_name
       sudo systemctl daemon-reload
       return $?
     fi
@@ -36,8 +66,7 @@ daemon::remove() {
 
   # sysv
   if [ "$(os::has_command service)" = "true" ]; then
-    sudo service $name stop
-    return $?
+    return 0
   fi
 
   log::success "daemon serice ${name} removed"

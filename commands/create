@@ -13,7 +13,6 @@ required() {
 create() {
   local service_name=$1
   local service_command=${@:2}
-  local is_run_at_load=false
   local is_daemon_force_recreate=false
 
   # while [[ $# -gt 0 ]]; do
@@ -45,14 +44,6 @@ create() {
     inquirer::text "daemon service command:" service_command "" "service command is required" required
   fi
 
-  if [ "$is_run_at_load" = "false" ]; then
-    local yesno=('Yes' 'No')
-    inquirer::select "would you like to auto start up ?" yesno answer
-    if [ "$answer" = "Yes" ]; then
-      is_run_at_load=true
-    fi
-  fi
-
   log::info ""
   log::info "create service ..."
   log::info "#################################"
@@ -82,7 +73,7 @@ create() {
     daemon::remove $service_name
   fi
 
-  daemon::create $service_name $is_run_at_load $service_command
+  daemon::create $service_name $service_command
 }
 
 help() {

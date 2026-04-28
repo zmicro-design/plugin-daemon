@@ -14,9 +14,8 @@ daemon::enable() {
   fi
 
   if [ "$(os::is_macos)" = "true" ]; then
-    local service_path=$(daemon_service::get_path $1)
-    sudo launchctl enable $service_path
-    return
+    sudo launchctl enable system/$service
+    return $?
   fi
 
   # systemd

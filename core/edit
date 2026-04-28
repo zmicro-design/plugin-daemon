@@ -14,6 +14,19 @@ daemon::edit_script() {
   fi
 
   sudo vim $script_path
+  if [ "$?" != "0" ]; then
+    log::error "[$(timestamp)] failed to edit service ($service_name) script at: $script_path"
+    return 1
+  fi
+
+  daemon::reload $service_name
+  if [ "$?" != "0" ]; then
+    log::error "[$(timestamp)] failed to reload service ($service_name)"
+    return 1
+  fi
+
+  log::success "[$(timestamp)] successfully edited service ($service_name) after edit script"
+  return $?
 }
 
 export -f daemon::edit_script

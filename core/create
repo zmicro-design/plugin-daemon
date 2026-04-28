@@ -2,8 +2,7 @@
 
 daemon::create() {
   local name=$1
-  local is_run_at_load=$2
-  local command=${@:3}
+  local command=${@:2}
 
   if [ "$name" = "" ] || [ "$command" = "" ]; then
     log::error "daemon service and command are required"
@@ -84,8 +83,7 @@ daemon::create_with_launch() {
   local service_log_path=$4
 
   # create launchctl plist
-  if [ "$is_run_at_load" = "true" ]; then
-    sudo tee $service_path >>/dev/null <<EOF
+  sudo tee $service_path >>/dev/null <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -96,29 +94,6 @@ daemon::create_with_launch() {
     <string>${service_name}</string>
     <key>RunAtLoad</key>
     <true/>
-    <key>ProgramArguments</key>
-    <array>
-      <string>${script_path}</string>
-    </array>
-    <key>StandardErrorPath</key>
-    <string>${service_log_path}</string>
-    <key>StandardOutPath</key>
-    <string>${service_log_path}</string>
-    <key>UserName</key>
-    <string>$(os::username)</string>
-  </dict>
-</plist>
-EOF
-  else
-    sudo tee $service_path >>/dev/null <<EOF
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-  <dict>
-    <key>Disabled</key>
-    <false/>
-    <key>Label</key>
-    <string>${service_name}</string>
     <key>KeepAlive</key>
     <true/>
     <key>ProgramArguments</key>
@@ -134,10 +109,9 @@ EOF
   </dict>
 </plist>
 EOF
-  fi
 
   # start
-  sudo launchctl enable $service_path
+  sudo launchctl enable system/$service_name
   if [ "$?" != "0" ]; then
     log::error "failed to enable launchctl service ${service_name}"
     exit 1
