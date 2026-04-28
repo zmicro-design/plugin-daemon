@@ -52,6 +52,10 @@ daemon::logs() {
   # fi
 
   local log_path=$(daemon_get_service_log_path $name)
+  if [ ! -f $log_path ]; then
+    log::error "log file for service $name not found, please check the service is running"
+    exit 1
+  fi
 
   if [ "$is_daemon_logs_follow" = "true" ]; then
     tail -f $log_path
