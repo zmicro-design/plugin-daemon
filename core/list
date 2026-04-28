@@ -1,7 +1,11 @@
 #!/bin/bash
 
 daemon::list() {
-  local service_files=$(array::filter daemon_is_service $(ls $DAEMON_SERVICE_DIR))
+  if [ ! -d "$DAEMON_SERVICE_DIR" ]; then
+    return
+  fi
+
+  local service_files=$(array::filter daemon_is_service $(ls "$DAEMON_SERVICE_DIR"))
 
   parser() {
     local index=$1

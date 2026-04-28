@@ -45,6 +45,16 @@ daemon_service::get_path() {
   echo "/etc/systemd/system/${service}.service"
 }
 
+daemon_service::get_sysv_path() {
+  local name=$1
+  if [ "$name" = "" ]; then
+    log::error "name is required"
+    exit 1
+  fi
+
+  echo "/etc/init.d/${name}"
+}
+
 daemon_get_service_log_path() {
   local name=$1
   if [ "$name" = "" ]; then
@@ -63,12 +73,25 @@ daemon_is_service_exist() {
     exit 1
   fi
 
-  local service_path=$(daemon_service::get_path $name)
-  if [ ! -f $service_path ]; then
-    echo "false"
-  else
+  local service_path=$(daemon_service::get_path "$name")
+  if [ -f "$service_path" ]; then
     echo "true"
+    return
   fi
+
+  if [ "$(os::is_macos)" != "true" ] && [ "$(os::has_command service)" = "true" ]; then
+    local sysv_service_path=$(daemon_service::get_sysv_path "$name")
+    if [ -f "$sysv_service_path" ]; then
+      echo "true"
+      return
+    fi
+  fi
+
+  echo "false"
+}
+
+daemon_has_service() {
+  daemon_is_service_exist $@
 }
 
 daemon_is_service() {
@@ -82,13 +105,10 @@ daemon_is_service() {
   echo "$(string::match $service_name ^${DAEMON_PREFIX})"
 }
 
-daemon_has_service() {
-  daemon_is_service_exist $@
-}
-
 export -f daemon_get_service_name
 export -f daemon_parse_service_name
 export -f daemon_service::get_path
+export -f daemon_service::get_sysv_path
 export -f daemon_get_service_log_path
 export -f daemon_is_service_exist
 export -f daemon_has_service

@@ -41,19 +41,26 @@ daemon::remove() {
     return
   fi
 
+  local sysv_service_path=$(daemon_service::get_sysv_path "$name")
+  local has_sysv_service_file="false"
+  if [ -f "$sysv_service_path" ]; then
+    has_sysv_service_file="true"
+  fi
+
   # stop before remove for linux too
-  if [ "$has_service_file" = "true" ]; then
+  if [ "$has_service_file" = "true" ] || [ "$has_sysv_service_file" = "true" ]; then
     if [ "$(os::has_command systemctl)" = "true" ]; then
       if [ "$(os::is_docker)" != "true" ]; then
-        sudo systemctl stop $service_name
+        sudo systemctl stop "$service_name"
       fi
     elif [ "$(os::has_command service)" = "true" ]; then
-      sudo service $name stop
+      sudo service "$name" stop
     fi
   fi
 
   # remove service/script files
   sudo rm -f "$service_path"
+  sudo rm -f "$sysv_service_path"
   sudo rm -f "$script_path"
 
   # systemd

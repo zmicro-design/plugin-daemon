@@ -131,6 +131,7 @@ daemon::create_with_systemd() {
   local service_path=$2
   local script_path=$3
   local service_log_path=$4
+  local name=$(daemon_parse_service_name "$service_name")
 
   sudo tee $service_path >>/dev/null <<EOF
 [Unit]
@@ -178,6 +179,9 @@ daemon::create_with_sysv() {
   local service_path=$2
   local script_path=$3
   local service_log_path=$4
+  local name=$(daemon_parse_service_name "$service_name")
+
+  service_path=$(daemon_service::get_sysv_path "$name")
 
   sudo tee $service_path >>/dev/null <<EOF
 # For RedHat and cousins:
@@ -279,14 +283,13 @@ esac
 exit 0
 EOF
 
-  sudo chmod +x $service_path
-  sudo ln -sf $service_path /etc/init.d/$name
+  sudo chmod +x "$service_path"
   if [ "$?" != "0" ]; then
-    log::error "failed to link service ${name}"
+    log::error "failed to prepare sysv service ${name}"
     exit 1
   fi
 
-  sudo service $name start
+  sudo service "$name" start
   if [ "$?" != "0" ]; then
     log::error "failed to start sysv service ${name}"
     exit 1
