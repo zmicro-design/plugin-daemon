@@ -137,8 +137,19 @@ EOF
   fi
 
   # start
-  # sudo launchctl enable $service_path
+  sudo launchctl enable $service_path
+  if [ "$?" != "0" ]; then
+    log::error "failed to enable launchctl service ${service_name}"
+    exit 1
+  fi
+
   sudo launchctl load $service_path
+  if [ "$?" != "0" ]; then
+    log::error "failed to load launchctl service ${service_name}"
+    exit 1
+  fi
+
+  log::success "daemon serice ${name} created"
 }
 
 daemon::create_with_systemd() {
@@ -168,7 +179,22 @@ WantedBy=multi-user.target
 EOF
 
   sudo systemctl daemon-reload
+  if [ "$?" != "0" ]; then
+    log::error "failed to reload systemctl"
+    exit 1
+  fi
+
+  sudo systemctl enable $service_name
+  if [ "$?" != "0" ]; then
+    log::error "failed to enable systemctl service ${service_name}"
+    exit 1
+  fi
+
   sudo systemctl start $service_name
+  if [ "$?" != "0" ]; then
+    log::error "failed to start systemctl service ${service_name}"
+    exit 1
+  fi
 
   log::success "daemon serice ${name} created"
 }
@@ -281,7 +307,16 @@ EOF
 
   sudo chmod +x $service_path
   sudo ln -sf $service_path /etc/init.d/$name
+  if [ "$?" != "0" ]; then
+    log::error "failed to link service ${name}"
+    exit 1
+  fi
+
   sudo service $name start
+  if [ "$?" != "0" ]; then
+    log::error "failed to start sysv service ${name}"
+    exit 1
+  fi
 
   log::success "daemon serice ${name} created"
 }
