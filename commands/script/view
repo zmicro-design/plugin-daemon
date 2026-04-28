@@ -1,11 +1,18 @@
 #!/bin/bash
 
 help() {
-  echo "Edit daemon service script"
+  echo "View daemon service script"
   echo ""
   echo "Usage:"
-  echo "  daemon edit script [options] [app_name]"
+  echo "  zdaemon script view [service]"
   echo ""
+  echo "Behavior:"
+  echo "  - Print script content to stdout"
+  echo "  - If [service] is omitted, prompts to select one"
+  echo ""
+  echo "Examples:"
+  echo "  zdaemon script view test-date"
+  echo "  zdaemon script view"
 }
 
 core() {
@@ -16,7 +23,7 @@ core() {
 
   local service=$1
   local args=${@:2}
-  
+
   if [ -z "$service" ]; then
     local available_services=($(daemon::list))
     os::inquirer service "select" available_services "Select an service ?" true
@@ -36,7 +43,7 @@ core() {
     fi
   fi
 
-  daemon::edit_script $service $args
+  daemon::view_script $service $args
 }
 
 run() {

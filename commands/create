@@ -80,10 +80,12 @@ help() {
   echo "Create a daemon service"
   echo ""
   echo "Usage:"
-  echo "  zdaemon create [options] [name] [commands...]"
+  echo "  zdaemon create [name] [commands...]"
   echo ""
-  echo "Options:"
-  echo "  -f, --force-recreate  Force recreate service"
+  echo "Behavior:"
+  echo "  - Create service and start immediately"
+  echo "  - Enable startup automatically"
+  echo "  - If service exists, asks whether to override"
 }
 
 core() {
